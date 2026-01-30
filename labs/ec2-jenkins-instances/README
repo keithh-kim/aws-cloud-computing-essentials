@@ -1,1 +1,57 @@
 
+# Jenkins Setup & Configuration on AWS EC2 (Ubuntu 24.04)
+
+This repository documents the end-to-end process of deploying a Jenkins CI/CD server. It covers the installation hurdles, security fixes, and initial setup.
+
+## 🤖 What is Jenkins?
+Jenkins is an automation server used for **CI/CD (Continuous Integration/Continuous Delivery)**. 
+- **CI**: Automatically testing and merging code when developers push to GitHub.
+- **CD**: Automatically deploying that code to a web server (like this EC2 instance) once it passes tests.
+
+---
+
+## 🛠️ Installation Guide (Ubuntu 24.04)
+
+### 1. System Update
+Refresh the local package index to ensure we download the latest versions of software.
+```bash
+sudo apt update
+
+### 2. Install Java 17 (The Runtime)
+Jenkins is a Java-based application and requires the JRE to run.
+
+Bash
+sudo apt install -y openjdk-17-jre fontconfig
+### 3. Add Jenkins Repository (The "GPG Fix")
+Modern Ubuntu versions (24.04+) require GPG keys to be "dearmored" to verify the software safely.
+
+Bash
+# Download and dearmor the key
+curl -fsSL [https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key](https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key) | gpg --dearmor | sudo tee /usr/share/keyrings/jenkins-keyring.gpg > /dev/null
+
+# Add the repository to the sources list
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] [https://pkg.jenkins.io/debian-stable](https://pkg.jenkins.io/debian-stable) binary/" | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+### 4. Final Install
+Bash
+sudo apt update
+sudo apt install jenkins -y
+🔑 Post-Installation Steps
+1. Verify Service Status
+Bash
+sudo systemctl status jenkins
+2. Unlock the Dashboard
+Retrieve the auto-generated admin password:
+
+Bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+3. Accessing the Web UI
+Open your browser and navigate to: http://<YOUR_EC2_PUBLIC_IP>:8080
+
+⚠️ Troubleshooting Note: If the site fails to load with a "Secure Connection" error, ensure you are using HTTP and not HTTPS. Modern browsers often force HTTPS, which Jenkins does not support out-of-the-box.
+
+📝 Lessons Learned
+Security Groups: Ensure AWS allows inbound traffic on Port 8080 for Jenkins and Port 22 for SSH.
+
+GPG Errors: If apt update throws a NO_PUBKEY error, the GPG key was likely not imported into the correct directory or format.
+
+Persistence: Using a "User Data" script in AWS during launch can automate this entire file for future instances.
